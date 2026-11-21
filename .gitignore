@@ -1,0 +1,136 @@
+# ==============================================================================
+# WasteWise – Git Ignore Rules
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Python & Bytecode
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+build/
+*.whl
+/models
+# ------------------------------------------------------------------------------
+# Virtual Environments
+# ------------------------------------------------------------------------------
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ------------------------------------------------------------------------------
+# Testing & Coverage
+# ------------------------------------------------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ------------------------------------------------------------------------------
+# Frontend & Node (Vite / React)
+# ------------------------------------------------------------------------------
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.vite/
+frontend/.vite/
+.eslintcache
+*.tsbuildinfo
+
+# ------------------------------------------------------------------------------
+# Environment Variables & Secrets
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.env
+# Ensure template is tracked
+!.env.example
+
+# ------------------------------------------------------------------------------
+# Raw Datasets (Multi-gigabyte image sets - excluded from version control)
+# ------------------------------------------------------------------------------
+Datasets/
+datasets/
+data/
+*.zip
+*.tar.gz
+*.tgz
+
+# ------------------------------------------------------------------------------
+# Model Weights & Checkpoints
+# ------------------------------------------------------------------------------
+# Keras cache downloaded during transfer learning
+.keras/
+
+# Heavy training checkpoints and intermediate weights
+models/checkpoints/*
+!models/checkpoints/.gitkeep
+*.weights.h5
+*.ckpt*
+*.pb
+*.tflite
+*.onnx
+
+# Default: allow active production model (~10MB, under GitHub's 100MB limit)
+# Comment out the line below if you prefer to host models outside Git (e.g. S3/LFS):
+!models/wet_dry/wet_dry_mobilenetv2.keras
+
+# ------------------------------------------------------------------------------
+# Runtime Database & User Uploads
+# ------------------------------------------------------------------------------
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+backend/instance/*
+!backend/instance/.gitkeep
+
+# Runtime uploaded images
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/tests/uploads/*
+!backend/tests/uploads/.gitkeep
+uploads/
+instance/
+
+# ------------------------------------------------------------------------------
+# Logs & Temporary Files
+# ------------------------------------------------------------------------------
+*.log
+logs/
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# ------------------------------------------------------------------------------
+# OS-specific files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ------------------------------------------------------------------------------
+# IDE & Code Editors
+# ------------------------------------------------------------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
