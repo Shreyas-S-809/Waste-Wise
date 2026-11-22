@@ -1,0 +1,52 @@
+{
+  "project": "WasteWise",
+  "version": "1.0.0",
+  "models": {
+    "wet_dry": {
+      "version": "1.0.0",
+      "architecture": "MobileNetV2",
+      "input_dimensions": [
+        224,
+        224,
+        3
+      ],
+      "classes": [
+        "Dry",
+        "Wet"
+      ],
+      "training_dataset_sources": [
+        "TechSash Waste Classification",
+        "RealWaste"
+      ],
+      "training_date": "2026-11-21 07:54:08Z",
+      "preprocessing_method": "MobileNetV2 scale [-1, 1]",
+      "status": "trained",
+      "model_file": "wet_dry_mobilenetv2.keras",
+      "metrics": {
+        "test_accuracy": 0.8800,
+        "decisive_accuracy": 0.9022,
+        "dry_precision": 0.92,
+        "dry_recall": 0.83,
+        "dry_f1": 0.87,
+        "wet_precision": 0.85,
+        "wet_recall": 0.93,
+        "wet_f1": 0.89,
+        "macro_f1": 0.88
+      }
+    },
+    "segregation_status": {
+      "version": "0.1.0-alpha",
+      "architecture": "MobileNetV2",
+      "classes": [
+        "Mixed Waste",
+        "Properly Segregated"
+      ],
+      "training_dataset_sources": [
+        "Curated Segregation Scenes"
+      ],
+      "status": "pending_annotated_scenes",
+      "model_file": "segregation_status_mobilenetv2.keras",
+      "notes": "Pending annotated multi-bin segregation scene photographs."
+    }
+  }
+}
