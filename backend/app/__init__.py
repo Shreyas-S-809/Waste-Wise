@@ -24,8 +24,8 @@ def create_app(config_name=None):
         format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     )
 
-    # CORS — allow the Vite dev server
-    CORS(app, resources={r'/api/*': {'origins': ['http://localhost:5173']}})
+    # CORS — allow all origins for API in production and local dev
+    CORS(app, resources={r'/api/*': {'origins': '*'}})
 
     # Extensions
     db.init_app(app)

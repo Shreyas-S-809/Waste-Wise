@@ -13,7 +13,9 @@ __pycache__/
 *.egg-info/
 build/
 *.whl
-/models
+models/checkpoints/
+models/wet_dry/*.keras
+
 # ------------------------------------------------------------------------------
 # Virtual Environments
 # ------------------------------------------------------------------------------
@@ -67,23 +69,14 @@ data/
 *.tgz
 
 # ------------------------------------------------------------------------------
-# Model Weights & Checkpoints
+# Model Weights & Checkpoints (Models folder is ~34MB, safe for GitHub & Vercel)
 # ------------------------------------------------------------------------------
 # Keras cache downloaded during transfer learning
 .keras/
 
-# Heavy training checkpoints and intermediate weights
-models/checkpoints/*
-!models/checkpoints/.gitkeep
-*.weights.h5
-*.ckpt*
-*.pb
-*.tflite
-*.onnx
-
-# Default: allow active production model (~10MB, under GitHub's 100MB limit)
-# Comment out the line below if you prefer to host models outside Git (e.g. S3/LFS):
-!models/wet_dry/wet_dry_mobilenetv2.keras
+# Explicitly ensure the entire models/ folder is tracked and committed
+!models/
+!models/**
 
 # ------------------------------------------------------------------------------
 # Runtime Database & User Uploads
