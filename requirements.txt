@@ -1,11 +1,8 @@
-# WasteWise Production Runtime Dependencies (Vercel & Cloud Deployment)
-# Stripped of heavy training/evaluation bloat (pandas, scikit-learn, matplotlib, seaborn, pytest)
-
-tensorflow-cpu>=2.13.0
+ai-edge-litert>=1.1.0
 flask>=3.0.0
 flask-cors>=4.0.0
 flask-sqlalchemy>=3.1.0
 Pillow>=10.0.0
-numpy>=1.24.0,<2.0.0
+numpy>=1.26.0,<2.0.0
 python-dotenv>=1.0.0
 werkzeug>=3.0.0
