@@ -219,7 +219,7 @@ export default function Classifier() {
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              <div>{error}</div>
+              <div>{typeof error === 'object' ? (error?.message || JSON.stringify(error)) : String(error)}</div>
             </div>
           )}
         </div>

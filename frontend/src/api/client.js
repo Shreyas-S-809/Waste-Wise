@@ -18,16 +18,28 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    let message =
-      error.response?.data?.error ||
-      error.response?.data?.message;
+    let message = null;
+    const resData = error.response?.data;
+
+    if (typeof resData === 'string') {
+      message = resData;
+    } else if (resData && typeof resData === 'object') {
+      if (typeof resData.error === 'string') {
+        message = resData.error;
+      } else if (resData.error && typeof resData.error.message === 'string') {
+        message = resData.error.message;
+      } else if (typeof resData.message === 'string') {
+        message = resData.message;
+      } else if (typeof resData.error === 'object') {
+        message = JSON.stringify(resData.error);
+      }
+    }
 
     if (!message) {
-      const responseDataStr = typeof error.response?.data === 'string' ? error.response.data : '';
-      if (responseDataStr.includes('ECONNREFUSED') || error.message?.includes('Network Error')) {
-        message = 'Cannot connect to WasteWise backend. Please ensure the Flask server is running on port 5000.';
+      if (error.message?.includes('Network Error') || error.code === 'ERR_NETWORK') {
+        message = 'Cannot connect to WasteWise backend. Please ensure the server is running.';
       } else if (error.response?.status === 500) {
-        message = 'Backend server unavailable or proxy error (HTTP 500). Please verify the Flask backend is running on port 5000.';
+        message = 'Backend server error (HTTP 500). Please check server logs.';
       } else if (error.response?.status === 503) {
         message = 'Model service unavailable (HTTP 503). Model training may still be required.';
       } else {
@@ -36,8 +48,7 @@ apiClient.interceptors.response.use(
     }
 
     const status = error.response?.status;
-
-    const enhancedError = new Error(message);
+    const enhancedError = new Error(String(message));
     enhancedError.status = status;
     enhancedError.originalError = error;
 

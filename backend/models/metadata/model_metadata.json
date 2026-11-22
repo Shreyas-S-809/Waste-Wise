@@ -21,7 +21,7 @@
       "training_date": "2026-11-21 07:54:08Z",
       "preprocessing_method": "MobileNetV2 scale [-1, 1]",
       "status": "trained",
-      "model_file": "wet_dry_mobilenetv2.keras",
+      "model_file": "wet_dry_mobilenetv2.tflite",
       "metrics": {
         "test_accuracy": 0.8800,
         "decisive_accuracy": 0.9022,

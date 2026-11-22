@@ -78,7 +78,7 @@ class PredictionService:
                 'warning': reason,
                 'disposal_advice': DISPOSAL_ADVICE['Uncertain'],
                 'probabilities': {lbl: 0.0 for lbl in labels},
-                'model_name': model_info.get('model_file', 'wet_dry_mobilenetv2.keras'),
+                'model_name': model_info.get('model_file', 'wet_dry_mobilenetv2.tflite'),
                 'model_version': model_info.get('version', '1.0.0'),
             }
 
@@ -97,7 +97,7 @@ class PredictionService:
             'warning': analysis['warning'],
             'disposal_advice': analysis['disposal_advice'],
             'probabilities': analysis['probabilities'],
-            'model_name': model_info.get('model_file', 'wet_dry_mobilenetv2.keras'),
+            'model_name': model_info.get('model_file', 'wet_dry_mobilenetv2.tflite'),
             'model_version': model_info.get('version', '1.0.0'),
         }
 

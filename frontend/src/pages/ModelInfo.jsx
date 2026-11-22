@@ -98,7 +98,7 @@ export default function ModelInfo() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Active Model File</span>
-              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: 500 }}>wet_dry_mobilenetv2.keras</span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: 500 }}>wet_dry_mobilenetv2.tflite</span>
             </div>
           </div>
         </div>
