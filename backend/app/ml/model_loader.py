@@ -8,9 +8,13 @@ import numpy as np
 from PIL import Image
 from pathlib import Path
 
-# Ensure KERAS_HOME points to project .keras cache
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-os.environ.setdefault('KERAS_HOME', str(PROJECT_ROOT / '.keras'))
+# Ensure KERAS_HOME points to project or temp .keras cache
+if os.environ.get('VERCEL'):
+    import tempfile
+    os.environ.setdefault('KERAS_HOME', os.path.join(tempfile.gettempdir(), '.keras'))
+else:
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+    os.environ.setdefault('KERAS_HOME', str(PROJECT_ROOT / '.keras'))
 
 logger = logging.getLogger(__name__)
 
@@ -116,14 +120,26 @@ class ModelManager:
         """Read models/metadata/model_metadata.json if available."""
         if self._metadata:
             return
-        meta_path = os.path.join(self._model_dir, 'metadata', 'model_metadata.json')
-        if os.path.isfile(meta_path):
-            try:
-                with open(meta_path, 'r') as fh:
-                    self._metadata = json.load(fh)
-                logger.info('Loaded model metadata from %s', meta_path)
-            except Exception as exc:
-                logger.warning('Failed to read model metadata: %s', exc)
+        search_dirs = [self._model_dir] if self._model_dir else []
+        backend_models = Path(__file__).resolve().parent.parent.parent / 'models'
+        if str(backend_models) not in search_dirs:
+            search_dirs.append(str(backend_models))
+        root_models = Path(__file__).resolve().parent.parent.parent.parent / 'models'
+        if str(root_models) not in search_dirs:
+            search_dirs.append(str(root_models))
+
+        for sdir in search_dirs:
+            if not sdir:
+                continue
+            meta_path = os.path.join(sdir, 'metadata', 'model_metadata.json')
+            if os.path.isfile(meta_path):
+                try:
+                    with open(meta_path, 'r') as fh:
+                        self._metadata = json.load(fh)
+                    logger.info('Loaded model metadata from %s', meta_path)
+                    return
+                except Exception as exc:
+                    logger.warning('Failed to read model metadata: %s', exc)
 
     # ------------------------------------------------------------------
     # Model loading
@@ -134,10 +150,21 @@ class ModelManager:
         if not sub:
             return None
         candidates = _MODEL_CANDIDATE_FILES.get(model_type, [])
-        for fname in candidates:
-            p = os.path.join(self._model_dir, sub, fname)
-            if os.path.isfile(p):
-                return p
+        search_dirs = [self._model_dir] if self._model_dir else []
+        backend_models = Path(__file__).resolve().parent.parent.parent / 'models'
+        if str(backend_models) not in search_dirs:
+            search_dirs.append(str(backend_models))
+        root_models = Path(__file__).resolve().parent.parent.parent.parent / 'models'
+        if str(root_models) not in search_dirs:
+            search_dirs.append(str(root_models))
+
+        for sdir in search_dirs:
+            if not sdir:
+                continue
+            for fname in candidates:
+                p = os.path.join(sdir, sub, fname)
+                if os.path.isfile(p):
+                    return p
         return None
 
     def get_model(self, model_type):

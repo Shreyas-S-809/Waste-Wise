@@ -15,7 +15,11 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'development')
 
-    app = Flask(__name__, instance_relative_config=True)
+    import tempfile
+    is_vercel = bool(os.environ.get('VERCEL'))
+    instance_path = os.path.join(tempfile.gettempdir(), 'instance') if is_vercel else None
+
+    app = Flask(__name__, instance_path=instance_path, instance_relative_config=True)
     app.config.from_object(config_by_name[config_name])
 
     # Logging
@@ -30,11 +34,17 @@ def create_app(config_name=None):
     # Extensions
     db.init_app(app)
 
-    # Ensure upload directory exists
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    # Ensure upload directory exists (handle read-only serverless filesystems)
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    except OSError as exc:
+        logging.warning("Could not create upload directory %s: %s", app.config.get('UPLOAD_FOLDER'), exc)
 
     # Ensure instance directory exists
-    os.makedirs(app.instance_path, exist_ok=True)
+    try:
+        os.makedirs(app.instance_path, exist_ok=True)
+    except OSError as exc:
+        logging.warning("Could not create instance directory %s: %s", app.instance_path, exc)
 
     # Initialise model manager with the configured model directory
     from app.ml.model_loader import model_manager
@@ -53,6 +63,9 @@ def create_app(config_name=None):
 
     # Create database tables on first request
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as exc:
+            logging.warning("db.create_all() failed: %s", exc)
 
     return app

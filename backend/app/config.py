@@ -19,7 +19,10 @@ class Config:
         'UPLOAD_FOLDER',
         os.path.join(TEMP_DIR, 'uploads') if IS_VERCEL else os.path.join(BASE_DIR, 'uploads')
     )
-    MODEL_DIR = os.environ.get('MODEL_DIR', os.path.join(PROJECT_ROOT, 'models'))
+    MODEL_DIR = os.environ.get(
+        'MODEL_DIR',
+        os.path.join(BASE_DIR, 'models') if os.path.isdir(os.path.join(BASE_DIR, 'models')) else os.path.join(PROJECT_ROOT, 'models')
+    )
     CONFIDENCE_THRESHOLD = 0.6
 
 
