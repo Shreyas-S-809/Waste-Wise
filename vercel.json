@@ -2,6 +2,11 @@
   "version": 2,
   "buildCommand": "npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "models/wet_dry/wet_dry_mobilenetv2.tflite"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -13,4 +18,3 @@
     }
   ]
 }
-

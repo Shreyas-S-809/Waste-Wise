@@ -1,9 +1,11 @@
-"""ModelManager — singleton that lazy‑loads and caches Keras models."""
+"""ModelManager — singleton that lazy‑loads and caches LiteRT/TFLite and Keras models."""
 
 import os
 import json
 import logging
 import threading
+import numpy as np
+from PIL import Image
 from pathlib import Path
 
 # Ensure KERAS_HOME points to project .keras cache
@@ -18,10 +20,66 @@ _MODEL_DIRS = {
     'segregation_status': 'segregation_status',
 }
 
-_MODEL_FILES = {
-    'wet_dry': 'wet_dry_mobilenetv2.keras',
-    'segregation_status': 'segregation_status_mobilenetv2.keras',
+_MODEL_CANDIDATE_FILES = {
+    'wet_dry': ['wet_dry_mobilenetv2.tflite', 'wet_dry_mobilenetv2.keras'],
+    'segregation_status': ['segregation_status_mobilenetv2.tflite', 'segregation_status_mobilenetv2.keras'],
 }
+
+
+def _load_tflite_interpreter(path):
+    """Load TFLite interpreter using ai-edge-litert, tflite-runtime, or tf.lite."""
+    try:
+        from ai_edge_litert.interpreter import Interpreter
+        logger.info('Using ai_edge_litert Interpreter')
+        return Interpreter(model_path=path)
+    except ImportError:
+        pass
+
+    try:
+        from tflite_runtime.interpreter import Interpreter
+        logger.info('Using tflite_runtime Interpreter')
+        return Interpreter(model_path=path)
+    except ImportError:
+        pass
+
+    try:
+        import tensorflow as tf
+        logger.info('Using tf.lite.Interpreter')
+        return tf.lite.Interpreter(model_path=path)
+    except ImportError as exc:
+        raise ImportError(
+            "No LiteRT or TFLite interpreter found. Please install 'ai-edge-litert'."
+        ) from exc
+
+
+class TFLiteModelWrapper:
+    """Wraps LiteRT / TFLite Interpreter to provide a Keras-like .predict() API."""
+
+    def __init__(self, interpreter, model_path):
+        self.interpreter = interpreter
+        self.interpreter.allocate_tensors()
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
+        self.model_path = model_path
+
+    def predict(self, input_data, verbose=0):
+        """Run inference on preprocessed numpy input (1, 224, 224, 3)."""
+        input_data = input_data.astype(np.float32)
+        self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
+        self.interpreter.invoke()
+        output = self.interpreter.get_tensor(self.output_details[0]['index'])
+        return output
+
+    def predict_waste(self, pil_image):
+        """Direct helper to predict from a PIL Image object."""
+        img = pil_image.convert('RGB').resize((224, 224), Image.LANCZOS)
+        input_data = np.expand_dims(np.array(img, dtype=np.float32), axis=0)
+        # MobileNetV2 preprocessing: (input_data / 127.5) - 1.0
+        input_data = (input_data / 127.5) - 1.0
+        self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
+        self.interpreter.invoke()
+        prediction = self.interpreter.get_tensor(self.output_details[0]['index'])[0]
+        return prediction
 
 
 class ModelManager:
@@ -73,27 +131,38 @@ class ModelManager:
 
     def _model_path(self, model_type):
         sub = _MODEL_DIRS.get(model_type)
-        fname = _MODEL_FILES.get(model_type)
-        if not sub or not fname:
+        if not sub:
             return None
-        return os.path.join(self._model_dir, sub, fname)
+        candidates = _MODEL_CANDIDATE_FILES.get(model_type, [])
+        for fname in candidates:
+            p = os.path.join(self._model_dir, sub, fname)
+            if os.path.isfile(p):
+                return p
+        return None
 
     def get_model(self, model_type):
-        """Return a loaded Keras model or None if unavailable."""
+        """Return a loaded LiteRT / Keras model or None if unavailable."""
         if model_type in self._models:
             return self._models[model_type]
 
         path = self._model_path(model_type)
         if path is None or not os.path.isfile(path):
-            logger.info('Model file not found for %s (expected %s)', model_type, path)
+            logger.info('Model file not found for %s (searched %s)', model_type, self._model_dir)
             return None
 
         try:
-            import tensorflow as tf
-            model = tf.keras.models.load_model(path)
-            self._models[model_type] = model
-            logger.info('Loaded model %s from %s', model_type, path)
-            return model
+            if path.endswith('.tflite'):
+                interpreter = _load_tflite_interpreter(path)
+                model = TFLiteModelWrapper(interpreter, path)
+                self._models[model_type] = model
+                logger.info('Loaded TFLite/LiteRT model %s from %s', model_type, path)
+                return model
+            else:
+                import tensorflow as tf
+                model = tf.keras.models.load_model(path)
+                self._models[model_type] = model
+                logger.info('Loaded Keras model %s from %s', model_type, path)
+                return model
         except Exception as exc:
             logger.error('Failed to load model %s: %s', model_type, exc)
             return None
@@ -107,11 +176,14 @@ class ModelManager:
         """Return metadata dict for a model type."""
         self._load_metadata()
 
-        available = self.is_model_available(model_type)
+        path = self._model_path(model_type)
+        available = path is not None and os.path.isfile(path)
+        active_file = os.path.basename(path) if path else 'unknown'
+
         info = {
             'model_type': model_type,
             'available': available,
-            'model_file': _MODEL_FILES.get(model_type, 'unknown'),
+            'model_file': active_file,
         }
 
         # Merge metadata from JSON if present
